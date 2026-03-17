@@ -100,7 +100,9 @@ app.get('/api/get_link', async (req, res) => {
             message: message // Cache the message object directly so we don't have to fetch it again
         });
 
-        const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+        const host = req.headers['x-forwarded-host'] || req.get('host');
+        const baseUrl = process.env.BASE_URL || `${protocol}://${host}`;
         const streamLink = `${baseUrl}/stream/${hash}`;
 
         const responseData = {
