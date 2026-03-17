@@ -100,8 +100,12 @@ app.get('/api/get_link', async (req, res) => {
             message: message // Cache the message object directly so we don't have to fetch it again
         });
 
-        const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
-        const streamLink = `${baseUrl}/stream/${hash}`;
+        // --- BAGIAN YANG SUDAH DIPERBAIKI ---
+        // Mengambil http/https dan domain secara otomatis dari server
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+        const host = req.get('host');
+        const streamLink = `${protocol}://${host}/stream/${hash}`;
+        // ------------------------------------
 
         const responseData = {
             success: true,
