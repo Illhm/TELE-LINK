@@ -27,6 +27,6 @@
     "telegram": "^2.26.22"
   },
   "overrides": {
-    "core-js": "^3.36.0"
+    "core-js": "3.36.1"
   }
 }
