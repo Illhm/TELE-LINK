@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add Inter font for better typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+        }
+        .hidden-state {
+            display: none;
+        }
+        /* Custom loading spinner */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
+        <div class="flex items-center gap-2">
+            <!-- Simple SVG Logo -->
+            <svg class="w-8 h-8 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.19-.08-.05-.19-.02-.27 0-.12.03-1.98 1.25-5.58 3.68-.52.36-1 .54-1.42.53-.47-.01-1.37-.26-2.03-.48-.81-.27-1.45-.41-1.39-.86.03-.24.36-.48.98-.74 3.84-1.67 6.4-2.77 7.68-3.3 3.65-1.5 4.41-1.76 4.9-1.77.11 0 .36.03.5.15.11.1.15.23.16.36 0 .09-.01.23-.02.32z"/>
+            </svg>
+            <span class="font-bold text-lg tracking-tight">Telegram Downloader</span>
+        </div>
+        <button class="text-gray-500 hover:text-gray-700 focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow flex flex-col items-center justify-center px-4 py-10 w-full max-w-3xl mx-auto">
+
+        <!-- STATE 1: HOMEPAGE -->
+        <div id="state-1" class="w-full flex flex-col items-center text-center">
+
+            <span class="bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-6">
+                Free & Online
+            </span>
+
+            <h1 class="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">
+                Telegram Downloader <br class="hidden md:block"/>
+                <span class="text-blue-600">— Free Video & File Downloader</span>
+            </h1>
+
+            <p class="text-gray-600 mb-8 max-w-xl text-sm md:text-base">
+                The fastest way to download videos, files and media from any public Telegram channel or group without logging in.
+            </p>
+
+            <!-- Input Card -->
+            <div class="bg-white w-full rounded-2xl shadow-lg p-5 md:p-8 mb-8 border border-gray-100">
+                <form id="download-form" class="flex flex-col gap-4">
+                    <div class="flex flex-col text-left">
+                        <label for="tg-link" class="text-sm font-medium text-gray-700 mb-1">Telegram Link</label>
+                        <input
+                            type="url"
+                            id="tg-link"
+                            placeholder="https://t.me/channelname/123"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                            required
+                        >
+                    </div>
+
+                    <div class="flex flex-row gap-3 mt-2">
+                        <button type="button" id="btn-clear" class="flex-1 bg-white text-gray-700 border border-gray-300 font-semibold py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-gray-200 outline-none">
+                            Clear
+                        </button>
+                        <button type="submit" id="btn-download" class="flex-1 bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors shadow-sm focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 outline-none flex items-center justify-center gap-2">
+                            <span>Download</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Loading Overlay inside form (hidden by default) -->
+                <div id="loading-state" class="hidden-state flex flex-col items-center justify-center py-6">
+                    <div class="loader mb-3"></div>
+                    <p class="text-sm text-gray-500 font-medium">Extracting file info...</p>
+                </div>
+
+                <!-- Error Message -->
+                <div id="error-msg" class="hidden-state mt-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 text-left">
+                </div>
+            </div>
+
+            <!-- Features List -->
+            <div class="w-full max-w-md text-left text-sm text-gray-600 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <span>Free & unlimited</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <span>No registration</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <span>Files up to 4 GB</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <span>Privacy protected</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATE 2: RESULT PAGE -->
+        <div id="state-2" class="w-full hidden-state flex flex-col items-center text-center">
+
+            <div class="bg-green-100 p-3 rounded-full mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+
+            <h2 class="text-2xl md:text-3xl font-bold mb-2 text-gray-900">Your Download is Ready</h2>
+            <p class="text-gray-500 mb-8 max-w-sm text-sm">Your direct link is being prepared. Please wait a moment.</p>
+
+            <!-- File Info Card -->
+            <div class="bg-white w-full rounded-2xl shadow-lg p-6 mb-8 border border-gray-100 flex flex-col items-center">
+                <div class="bg-gray-50 w-full rounded-lg p-4 mb-6 border border-gray-200">
+                    <p class="text-xs font-bold text-gray-400 mb-1 tracking-wider">FILE NAME</p>
+                    <p id="result-filename" class="font-medium text-gray-800 break-all text-sm md:text-base">filename.ext</p>
+                </div>
+
+                <div class="flex flex-col w-full gap-3">
+                    <a id="btn-download-file" href="#" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors shadow-sm focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 outline-none flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        <span>Download File</span>
+                    </a>
+                    <button id="btn-copy-link" class="w-full bg-white text-gray-700 border border-gray-300 font-semibold py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-gray-200 outline-none flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                        </svg>
+                        <span>Copy Link</span>
+                    </button>
+                </div>
+
+                <button id="btn-back" class="mt-6 text-sm text-blue-600 hover:text-blue-800 font-medium underline-offset-4 hover:underline">
+                    &larr; Download another file
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-gray-200 py-6 text-center text-sm text-gray-500">
+        <p>&copy; 2024 Telegram Downloader. This tool is not affiliated with Telegram.</p>
+    </footer>
+
+    <!-- Toast Notification (Hidden) -->
+    <div id="toast" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-50 text-sm font-medium">
+        Copied to clipboard!
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elements
+            const state1 = document.getElementById('state-1');
+            const state2 = document.getElementById('state-2');
+            const form = document.getElementById('download-form');
+            const inputLink = document.getElementById('tg-link');
+            const btnClear = document.getElementById('btn-clear');
+            const loadingState = document.getElementById('loading-state');
+            const errorMsg = document.getElementById('error-msg');
+            const formControls = form.querySelector('.flex-row'); // The div holding buttons
+
+            const resultFilename = document.getElementById('result-filename');
+            const btnDownloadFile = document.getElementById('btn-download-file');
+            const btnCopyLink = document.getElementById('btn-copy-link');
+            const btnBack = document.getElementById('btn-back');
+            const toast = document.getElementById('toast');
+
+            let currentDownloadLink = '';
+
+            // Clear Input
+            btnClear.addEventListener('click', () => {
+                inputLink.value = '';
+                inputLink.focus();
+                hideError();
+            });
+
+            // Form Submit (Download Click)
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                hideError();
+
+                const urlStr = inputLink.value.trim();
+                if (!urlStr) return;
+
+                // Parse Telegram URL
+                // Format expected: https://t.me/channelname/123 or t.me/c/12345/67
+                let channelId = null;
+                let messageId = null;
+
+                try {
+                    // Simple parsing logic.
+                    // Matches formats like:
+                    // t.me/csindosat/55
+                    // t.me/c/123456789/55
+                    const url = new URL(urlStr.startsWith('http') ? urlStr : `https://${urlStr}`);
+                    const pathParts = url.pathname.split('/').filter(p => p);
+
+                    if (pathParts.length >= 2) {
+                        if (pathParts[0] === 'c' && pathParts.length >= 3) {
+                            // Private channel format: t.me/c/123456789/55
+                            // Telegram API expects '-100' prefix for private channels
+                            channelId = '-100' + pathParts[1];
+                            messageId = pathParts[2];
+                        } else {
+                            // Public format: t.me/channelname/55
+                            channelId = pathParts[0];
+                            messageId = pathParts[1];
+                        }
+                    } else {
+                        throw new Error("Invalid Telegram URL format. Example: https://t.me/channel/123");
+                    }
+                } catch (err) {
+                    showError("Could not parse URL. Please enter a valid Telegram post link (e.g., https://t.me/channel/123).");
+                    return;
+                }
+
+                // Show loading state
+                formControls.classList.add('hidden-state');
+                loadingState.classList.remove('hidden-state');
+
+                try {
+                    // Fetch from our backend
+                    const response = await fetch(`/api/get_link?channel_id=${encodeURIComponent(channelId)}&message_id=${encodeURIComponent(messageId)}`);
+                    const json = await response.json();
+
+                    if (!response.ok || !json.success) {
+                        throw new Error(json.error || json.message || "Failed to fetch file info.");
+                    }
+
+                    // Extract data based on expected structure
+                    const data = json.data.data;
+
+                    // Update UI State 2
+                    resultFilename.textContent = data.file_name;
+                    currentDownloadLink = data.link;
+                    btnDownloadFile.href = currentDownloadLink;
+
+                    // Switch state
+                    state1.classList.add('hidden-state');
+                    state2.classList.remove('hidden-state');
+
+                } catch (error) {
+                    showError(error.message);
+                } finally {
+                    // Restore form UI
+                    loadingState.classList.add('hidden-state');
+                    formControls.classList.remove('hidden-state');
+                }
+            });
+
+            // Copy Link Button
+            btnCopyLink.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(currentDownloadLink);
+                    showToast("Link copied to clipboard!");
+                } catch (err) {
+                    showToast("Failed to copy link.");
+                }
+            });
+
+            // Back Button
+            btnBack.addEventListener('click', () => {
+                inputLink.value = '';
+                state2.classList.add('hidden-state');
+                state1.classList.remove('hidden-state');
+            });
+
+            // Helper functions
+            function showError(msg) {
+                errorMsg.textContent = msg;
+                errorMsg.classList.remove('hidden-state');
+            }
+
+            function hideError() {
+                errorMsg.classList.add('hidden-state');
+                errorMsg.textContent = '';
+            }
+
+            function showToast(msg) {
+                toast.textContent = msg;
+                toast.classList.remove('opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('opacity-0');
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
