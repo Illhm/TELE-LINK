@@ -5,11 +5,14 @@ const crypto = require('crypto');
 const mime = require('mime-types');
 const bigInt = require('big-integer');
 const dotenv = require('dotenv');
+const path = require('path');
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 const apiId = parseInt(process.env.API_ID || '0');
 const apiHash = process.env.API_HASH || '';
